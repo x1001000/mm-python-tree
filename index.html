@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MM Python Tree</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Nunito:wght@400;600;700&display=swap');
+      
+      body {
+        font-family: 'Nunito', sans-serif;
+      }
+      
+      .font-christmas {
+        font-family: 'Mountains of Christmas', cursive;
+      }
+
+      @keyframes twinkle {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+      }
+      
+      .animate-twinkle {
+        animation: twinkle 2s infinite ease-in-out;
+      }
+      
+      .animate-twinkle-delay-1 {
+        animation: twinkle 2.5s infinite ease-in-out 0.5s;
+      }
+      
+      .animate-twinkle-delay-2 {
+        animation: twinkle 3s infinite ease-in-out 1s;
+      }
+
+      /* Custom Scrollbar for wishes */
+      .wish-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .wish-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .wish-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "uuid": "https://esm.sh/uuid@^13.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

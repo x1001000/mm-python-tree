@@ -1,0 +1,5 @@
+{
+  "name": "MM Python Tree",
+  "description": "A virtual wish tree for MMers at MacroMicro. Place wishes, toggle decorations, and request songs from the hidden speaker.",
+  "requestFramePermissions": []
+}
