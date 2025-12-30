@@ -9,7 +9,6 @@ const API_KEY = import.meta.env.VITE_JSONBIN_API_KEY || '';
 const BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID || '';
 const BASE_URL = 'https://api.jsonbin.io/v3';
 
-console.log('JSONBin config:', { hasApiKey: !!API_KEY, hasBinId: !!BIN_ID, binId: BIN_ID });
 
 export interface Wish {
   id: string;
@@ -33,7 +32,7 @@ export const wishesApi = {
     try {
       const response = await fetch(`${BASE_URL}/b/${BIN_ID}/latest`, {
         headers: {
-          'X-Access-Key': API_KEY,
+          'X-Master-Key': API_KEY,
         },
       });
 
@@ -55,18 +54,14 @@ export const wishesApi = {
     }
 
     try {
-      console.log('Saving to JSONBin...', wishes);
       const response = await fetch(`${BASE_URL}/b/${BIN_ID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Key': API_KEY,
+          'X-Master-Key': API_KEY,
         },
         body: JSON.stringify(wishes),
       });
-
-      const data = await response.json();
-      console.log('JSONBin save response:', response.ok, data);
 
       return response.ok;
     } catch (error) {
