@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Wish, DecorationType } from '../types';
 import WishCard from './WishCard';
 import WishModal from './WishModal';
@@ -26,7 +26,37 @@ const WishTree: React.FC<WishTreeProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [imgLoadError, setImgLoadError] = useState(false);
   const [imageKey, setImageKey] = useState(0);
-  
+  const [isRadioGlowing, setIsRadioGlowing] = useState(false);
+
+  // Random glow effect for the radio/speaker
+  useEffect(() => {
+    const triggerRandomGlow = () => {
+      setIsRadioGlowing(true);
+      setTimeout(() => setIsRadioGlowing(false), 2000); // Match animation duration
+    };
+
+    // Initial glow after a short delay
+    const initialTimeout = setTimeout(triggerRandomGlow, 3000);
+
+    // Set up random interval for subsequent glows
+    const scheduleNextGlow = () => {
+      const randomDelay = 5000 + Math.random() * 10000; // 5-15 seconds
+      return setTimeout(() => {
+        triggerRandomGlow();
+        glowInterval = scheduleNextGlow();
+      }, randomDelay);
+    };
+
+    let glowInterval = scheduleNextGlow();
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearTimeout(glowInterval);
+    };
+  }, []);
+
+  // Speaker trigger bounds (percentage-based)
+  const speakerBounds = { left: 29, top: 67, width: 10, height: 8 };
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -37,17 +67,28 @@ const WishTree: React.FC<WishTreeProps> = ({
 
   const handleTreeClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
-    
+
     // Ignore clicks on UI elements
-    if ((e.target as HTMLElement).closest('button') || 
+    if ((e.target as HTMLElement).closest('button') ||
         (e.target as HTMLElement).closest('.speaker-trigger') ||
         (e.target as HTMLElement).closest('.ui-control')) {
       return;
     }
-    
+
     const rect = containerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // Block card placement in speaker area
+    const inSpeakerArea =
+      x >= speakerBounds.left &&
+      x <= speakerBounds.left + speakerBounds.width &&
+      y >= speakerBounds.top &&
+      y <= speakerBounds.top + speakerBounds.height;
+
+    if (inSpeakerArea) {
+      return;
+    }
 
     setModalState({
       isOpen: true,
@@ -196,12 +237,14 @@ const WishTree: React.FC<WishTreeProps> = ({
           className="speaker-trigger absolute top-[67%] left-[29%] w-[10%] h-[8%] cursor-pointer z-10 group"
           title="Click to play music"
         >
-          {/* Subtle pulse to hint at interactivity */}
-          <div className="absolute inset-0 rounded-full bg-pink-400/20 animate-pulse"></div>
+          {/* Random glow effect */}
+          {isRadioGlowing && (
+            <div className="absolute inset-[-120%] rounded-full bg-pink-400 blur-2xl animate-radio-glow pointer-events-none"></div>
+          )}
           {/* Strong glow on hover */}
           <div className="absolute inset-[-50%] rounded-full bg-pink-500 opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-300"></div>
           <div className="absolute inset-0 rounded-full border-2 border-pink-400/0 group-hover:border-pink-400/80 transition-all duration-300"></div>
-          <Speaker className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/0 group-hover:text-white transition-all duration-300" size={20} />
+          <Speaker className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${isRadioGlowing ? 'text-white/80' : 'text-white/0'} group-hover:text-white`} size={20} />
         </div>
 
         {/* Lights toggle */}
