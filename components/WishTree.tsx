@@ -56,7 +56,7 @@ const WishTree: React.FC<WishTreeProps> = ({
   }, []);
 
   // Speaker trigger bounds (percentage-based)
-  const speakerBounds = { left: 29, top: 67, width: 10, height: 8 };
+  const speakerBounds = { left: 31, top: 67, width: 10, height: 8 };
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -234,17 +234,16 @@ const WishTree: React.FC<WishTreeProps> = ({
             e.stopPropagation();
             onOpenMusicPlayer();
           }}
-          className="speaker-trigger absolute top-[67%] left-[29%] w-[10%] h-[8%] cursor-pointer z-10 group"
+          className="speaker-trigger absolute top-[67%] left-[31%] w-[10%] h-[8%] cursor-pointer z-10 group"
           title="Click to play music"
         >
           {/* Random glow effect */}
           {isRadioGlowing && (
-            <div className="absolute inset-[-120%] rounded-full bg-pink-400 blur-2xl animate-radio-glow pointer-events-none"></div>
+            <div className="absolute inset-[-60%] rounded-full bg-pink-500/60 blur-xl animate-radio-glow pointer-events-none"></div>
           )}
           {/* Strong glow on hover */}
           <div className="absolute inset-[-50%] rounded-full bg-pink-500 opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-300"></div>
-          <div className="absolute inset-0 rounded-full border-2 border-pink-400/0 group-hover:border-pink-400/80 transition-all duration-300"></div>
-          <Speaker className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${isRadioGlowing ? 'text-white/80' : 'text-white/0'} group-hover:text-white`} size={20} />
+          <Speaker className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 text-white/0 group-hover:text-white" size={20} />
         </div>
 
         {/* Lights toggle */}
