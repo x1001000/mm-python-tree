@@ -234,7 +234,7 @@ const WishTree: React.FC<WishTreeProps> = ({
             e.stopPropagation();
             onOpenMusicPlayer();
           }}
-          className="speaker-trigger absolute top-[67%] left-[31%] w-[10%] h-[8%] cursor-pointer z-10 group"
+          className="speaker-trigger absolute top-[67%] left-[30%] w-[10%] h-[8%] cursor-pointer z-10 group"
           title="Click to play music"
         >
           {/* Random glow effect */}
