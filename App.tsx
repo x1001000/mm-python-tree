@@ -126,11 +126,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center py-8 px-4 font-sans text-gray-800 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center pt-4 pb-8 px-4 font-sans text-gray-800 relative overflow-hidden">
       
       {/* Header */}
-      <header className="mb-6 text-center z-10">
-        <h1 className="text-4xl md:text-5xl font-christmas font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200 drop-shadow-md">
+      <header className="mb-2 text-center z-10">
+        <h1 className="text-2xl md:text-3xl font-christmas font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200 drop-shadow-md pb-1">
           MM Python Tree
         </h1>
       </header>
@@ -155,7 +155,7 @@ const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="mt-8 text-gray-500 text-xs text-center z-10">
+      <footer className="mt-2 text-gray-500 text-xs text-center z-10">
         <p>© {new Date().getFullYear()} MacroMicro. Built with ❤️ for MMers.</p>
       </footer>
 
