@@ -157,7 +157,6 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="mt-8 text-gray-500 text-xs text-center z-10">
         <p>© {new Date().getFullYear()} MacroMicro. Built with ❤️ for MMers.</p>
-        <p className="opacity-50">Note: Data is stored in browser LocalStorage.</p>
       </footer>
 
       {/* Background Ambience */}
