@@ -133,9 +133,6 @@ const App: React.FC = () => {
         <h1 className="text-4xl md:text-5xl font-christmas font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-200 drop-shadow-md">
           MM Python Tree
         </h1>
-        <p className="text-gray-400 mt-2 text-sm max-w-md mx-auto">
-          Click anywhere to hang a wish. Find the secret radio for some tunes!
-        </p>
       </header>
 
       {/* Main Stage */}
