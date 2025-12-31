@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wish } from '../types';
 import { X, Edit2, Lock } from 'lucide-react';
 
@@ -20,6 +20,17 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
     setError('');
   };
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPasswordInput) {
+        setShowPasswordInput(null);
+        setIsHovered(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showPasswordInput]);
+
   const submitPassword = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -36,6 +47,7 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
       onDelete(wish);
     }
     setShowPasswordInput(null);
+    setIsHovered(false);
   };
 
   return (
@@ -44,8 +56,9 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
       style={{ left: `${wish.x}%`, top: `${wish.y}%` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
-        setIsHovered(false);
-        setShowPasswordInput(null);
+        if (!showPasswordInput) {
+          setIsHovered(false);
+        }
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -100,9 +113,12 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
               />
               {error && <span className="text-[10px] text-red-500">{error}</span>}
               <div className="flex gap-1 justify-between">
-                <button 
-                  type="button" 
-                  onClick={() => setShowPasswordInput(null)}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordInput(null);
+                    setIsHovered(false);
+                  }}
                   className="text-[10px] text-gray-500 hover:text-gray-700 px-1"
                 >
                   Cancel

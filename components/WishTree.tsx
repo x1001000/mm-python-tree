@@ -24,9 +24,50 @@ const WishTree: React.FC<WishTreeProps> = ({
   onToggleLights,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [imgLoadError, setImgLoadError] = useState(false);
   const [imageKey, setImageKey] = useState(0);
   const [isRadioGlowing, setIsRadioGlowing] = useState(false);
+  const [imageBounds, setImageBounds] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+
+  // Calculate actual image bounds within container (accounting for object-contain)
+  const updateImageBounds = () => {
+    if (!imgRef.current || !containerRef.current) return;
+    const img = imgRef.current;
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const naturalRatio = img.naturalWidth / img.naturalHeight;
+    const containerRatio = containerRect.width / containerRect.height;
+
+    let renderedWidth: number, renderedHeight: number, offsetLeft: number, offsetTop: number;
+
+    if (naturalRatio > containerRatio) {
+      // Image is wider - letterboxed (black bars top/bottom)
+      renderedWidth = containerRect.width;
+      renderedHeight = containerRect.width / naturalRatio;
+      offsetLeft = 0;
+      offsetTop = (containerRect.height - renderedHeight) / 2;
+    } else {
+      // Image is taller - pillarboxed (black bars left/right)
+      renderedHeight = containerRect.height;
+      renderedWidth = containerRect.height * naturalRatio;
+      offsetLeft = (containerRect.width - renderedWidth) / 2;
+      offsetTop = 0;
+    }
+
+    setImageBounds({
+      left: offsetLeft,
+      top: offsetTop,
+      width: renderedWidth,
+      height: renderedHeight,
+    });
+  };
+
+  useEffect(() => {
+    updateImageBounds();
+    window.addEventListener('resize', updateImageBounds);
+    return () => window.removeEventListener('resize', updateImageBounds);
+  }, [imgLoadError]);
 
   // Random glow effect for the radio/speaker
   useEffect(() => {
@@ -182,10 +223,12 @@ const WishTree: React.FC<WishTreeProps> = ({
       >
         {!imgLoadError ? (
           <img
+            ref={imgRef}
             key={imageKey}
             src={imageSrc}
             alt="MM Python Tree"
             className="w-full h-full object-contain pointer-events-none select-none"
+            onLoad={updateImageBounds}
             onError={() => setImgLoadError(true)}
           />
         ) : (
@@ -229,22 +272,30 @@ const WishTree: React.FC<WishTreeProps> = ({
         ))}
 
         {/* Speaker trigger - positioned on the desk speaker */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenMusicPlayer();
-          }}
-          className="speaker-trigger absolute top-[67%] left-[30%] w-[10%] h-[8%] cursor-pointer z-10 group"
-          title="Click to play music"
-        >
-          {/* Random glow effect */}
-          {isRadioGlowing && (
-            <div className="absolute inset-[-60%] rounded-full bg-pink-500/60 blur-xl animate-radio-glow pointer-events-none"></div>
-          )}
-          {/* Strong glow on hover */}
-          <div className="absolute inset-[-50%] rounded-full bg-pink-500 opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-300"></div>
-          <Speaker className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 text-white/0 group-hover:text-white" size={20} />
-        </div>
+        {imageBounds && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenMusicPlayer();
+            }}
+            className="speaker-trigger absolute cursor-pointer z-10 group"
+            style={{
+              left: imageBounds.left + imageBounds.width * 0.15,
+              top: imageBounds.top + imageBounds.height * 0.67,
+              width: imageBounds.width * 0.10,
+              height: imageBounds.height * 0.08,
+            }}
+            title="Click to play music"
+          >
+            {/* Random glow effect */}
+            {isRadioGlowing && (
+              <div className="absolute inset-[-60%] rounded-full bg-pink-500/60 blur-xl animate-radio-glow pointer-events-none"></div>
+            )}
+            {/* Strong glow on hover */}
+            <div className="absolute inset-[-50%] rounded-full bg-pink-500 opacity-0 group-hover:opacity-60 blur-xl transition-opacity duration-300"></div>
+            <Speaker className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 text-white/0 group-hover:text-white" size={20} />
+          </div>
+        )}
 
         {/* Lights toggle */}
         <button

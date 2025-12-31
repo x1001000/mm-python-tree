@@ -31,7 +31,7 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
         setAuthor(initialData.author || '');
         setColor(initialData.color || COLORS[0]);
         // Password not pre-filled for security (even in this demo)
-        setPassword(''); 
+        setPassword('');
       } else {
         setMessage('');
         setAuthor('');
@@ -40,6 +40,16 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
       }
     }
   }, [isOpen, initialData]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -59,8 +69,14 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-200">
-      <div className="bg-white/50 backdrop-blur-lg rounded-xl shadow-xl w-full max-w-xs overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white/50 backdrop-blur-lg rounded-xl shadow-xl w-full max-w-xs overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <form onSubmit={handleSubmit} className="p-3 space-y-2">
           <textarea
             value={message}
