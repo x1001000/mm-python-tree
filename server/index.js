@@ -84,7 +84,6 @@ app.post('/api/dj/request-song', async (req, res) => {
     }
 
     const genai = new GoogleGenAI({ apiKey });
-    const model = genai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `You are a fun, enthusiastic radio DJ at a festive wish tree celebration!
 Someone just requested the song: "${songName}"
@@ -92,8 +91,11 @@ Someone just requested the song: "${songName}"
 Give a short, energetic 1-2 sentence intro for this song as if you're about to play it on the radio.
 Be creative and match the vibe of the song title. Keep it under 50 words.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    const result = await genai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+    });
+    const response = result.text;
 
     res.json({ response });
   } catch (error) {

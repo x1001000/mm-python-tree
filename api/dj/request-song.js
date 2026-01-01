@@ -1,7 +1,7 @@
 // Vercel Serverless Function for /api/dj/request-song
 // Handles POST requests for DJ song requests via Gemini AI
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -37,8 +37,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const genai = new GoogleGenAI({ apiKey });
 
     const prompt = `You are a fun, enthusiastic radio DJ at a festive wish tree celebration!
 Someone just requested the song: "${songName}"
@@ -46,8 +45,11 @@ Someone just requested the song: "${songName}"
 Give a short, energetic 1-2 sentence intro for this song as if you're about to play it on the radio.
 Be creative and match the vibe of the song title. Keep it under 50 words.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response.text();
+    const result = await genai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+    });
+    const response = result.text;
 
     return res.status(200).json({ response });
 
