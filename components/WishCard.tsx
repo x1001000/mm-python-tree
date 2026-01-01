@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wish } from '../types';
 import { X, Edit2, Lock } from 'lucide-react';
+import { timingSafeEqual, checkRateLimit, recordFailedAttempt, resetRateLimit } from '../utils/security';
 
 interface WishCardProps {
   wish: Wish;
@@ -13,6 +14,8 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
   const [showPasswordInput, setShowPasswordInput] = useState<'edit' | 'delete' | null>(null);
   const [passwordAttempt, setPasswordAttempt] = useState('');
   const [error, setError] = useState('');
+  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitWaitTime, setRateLimitWaitTime] = useState(0);
 
   const handleAction = (type: 'edit' | 'delete') => {
     setShowPasswordInput(type);
@@ -35,12 +38,35 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (wish.password && passwordAttempt !== wish.password) {
-      setError('Wrong password');
+    // Check rate limiting
+    const rateLimit = checkRateLimit(wish.id);
+    if (!rateLimit.allowed) {
+      const waitSeconds = Math.ceil(rateLimit.waitMs / 1000);
+      setError(`Too many attempts. Wait ${waitSeconds}s`);
+      setIsRateLimited(true);
+      setRateLimitWaitTime(rateLimit.waitMs);
+
+      // Auto-clear rate limit message after wait time
+      setTimeout(() => {
+        setIsRateLimited(false);
+        setError('');
+      }, rateLimit.waitMs);
+
       return;
     }
 
-    // Success
+    // Timing-safe password comparison
+    if (wish.password && !timingSafeEqual(passwordAttempt, wish.password)) {
+      const lockoutMs = recordFailedAttempt(wish.id);
+      const lockoutSeconds = Math.ceil(lockoutMs / 1000);
+      setError(`Authentication failed. Wait ${lockoutSeconds}s`);
+      setPasswordAttempt('');
+      return;
+    }
+
+    // Success - reset rate limiting
+    resetRateLimit(wish.id);
+
     if (showPasswordInput === 'edit') {
       onEdit(wish);
     } else {
@@ -48,6 +74,7 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
     }
     setShowPasswordInput(null);
     setIsHovered(false);
+    setError('');
   };
 
   return (
@@ -110,6 +137,7 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
                 className="w-full text-xs p-1 border rounded focus:outline-none focus:border-blue-500"
                 placeholder="******"
                 autoFocus
+                disabled={isRateLimited}
               />
               {error && <span className="text-[10px] text-red-500">{error}</span>}
               <div className="flex gap-1 justify-between">
@@ -123,9 +151,10 @@ const WishCard: React.FC<WishCardProps> = ({ wish, onEdit, onDelete }) => {
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
-                  className="text-[10px] bg-gray-800 text-white px-2 py-0.5 rounded hover:bg-black"
+                  className="text-[10px] bg-gray-800 text-white px-2 py-0.5 rounded hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isRateLimited}
                 >
                   {showPasswordInput === 'edit' ? 'Edit' : 'Del'}
                 </button>

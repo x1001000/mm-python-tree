@@ -15,6 +15,26 @@ npm run preview # Preview production build
 
 Set `GEMINI_API_KEY` in `.env.local` for the Gemini AI-powered DJ feature in the music player.
 
+### ⚠️ SECURITY WARNING
+
+**This is a demo application with known security limitations:**
+
+1. **API Key Exposure**: The `GEMINI_API_KEY` is bundled into the client-side JavaScript and exposed in the browser. Anyone can extract it from the network requests or source code. **Never use production API keys** or keys with billing enabled in this application.
+
+2. **Plaintext Password Storage**: Wish passwords are stored in plaintext in browser localStorage without encryption or hashing. This is **NOT suitable for production use**. Passwords can be easily extracted via:
+   - Browser DevTools (Application → Local Storage)
+   - XSS attacks
+   - Physical access to the device
+
+3. **Client-Side Security**: All authentication and data validation happens client-side, which can be bypassed by anyone with basic developer tools knowledge.
+
+**For production use, you would need:**
+- Backend server to securely store API keys
+- Proper password hashing (bcrypt, Argon2)
+- Server-side authentication and authorization
+- HTTPS-only cookie-based sessions
+- Rate limiting and CSRF protection
+
 ## Architecture Overview
 
 This is a React 19 + TypeScript + Vite app called "MM Python Tree" — an interactive wish tree where users click to hang wish cards. Data persists in browser localStorage.

@@ -21,6 +21,49 @@ export interface Wish {
   createdAt: number;
 }
 
+/**
+ * Validate that a value is a valid Wish object
+ */
+function isValidWish(obj: any): obj is Wish {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.id === 'string' &&
+    typeof obj.x === 'number' &&
+    typeof obj.y === 'number' &&
+    typeof obj.message === 'string' &&
+    typeof obj.author === 'string' &&
+    (obj.password === undefined || typeof obj.password === 'string') &&
+    typeof obj.color === 'string' &&
+    typeof obj.createdAt === 'number' &&
+    // Additional validation
+    obj.x >= 0 && obj.x <= 100 &&
+    obj.y >= 0 && obj.y <= 100 &&
+    obj.message.length <= 100 &&
+    obj.author.length <= 20 &&
+    obj.createdAt > 0
+  );
+}
+
+/**
+ * Sanitize and validate an array of wishes
+ */
+function validateWishesArray(data: any): Wish[] {
+  if (!Array.isArray(data)) {
+    console.warn('API response is not an array');
+    return [];
+  }
+
+  // Filter and validate each wish
+  return data.filter((item, index) => {
+    if (!isValidWish(item)) {
+      console.warn(`Invalid wish at index ${index}:`, item);
+      return false;
+    }
+    return true;
+  });
+}
+
 export const wishesApi = {
   // Fetch all wishes
   async getWishes(): Promise<Wish[]> {
@@ -36,10 +79,20 @@ export const wishesApi = {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch wishes');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch wishes: ${response.status} ${response.statusText}`);
+      }
 
       const data = await response.json();
-      return data.record || [];
+
+      // Validate response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid API response structure');
+      }
+
+      // Validate and sanitize the wishes array
+      const wishes = validateWishesArray(data.record || []);
+      return wishes;
     } catch (error) {
       console.error('Error fetching wishes:', error);
       return [];
@@ -53,6 +106,12 @@ export const wishesApi = {
       return false;
     }
 
+    // Validate wishes before sending
+    const validWishes = validateWishesArray(wishes);
+    if (validWishes.length !== wishes.length) {
+      console.warn(`Filtered out ${wishes.length - validWishes.length} invalid wishes before saving`);
+    }
+
     try {
       const response = await fetch(`${BASE_URL}/b/${BIN_ID}`, {
         method: 'PUT',
@@ -60,10 +119,14 @@ export const wishesApi = {
           'Content-Type': 'application/json',
           'X-Master-Key': API_KEY,
         },
-        body: JSON.stringify(wishes),
+        body: JSON.stringify(validWishes),
       });
 
-      return response.ok;
+      if (!response.ok) {
+        throw new Error(`Failed to save wishes: ${response.status} ${response.statusText}`);
+      }
+
+      return true;
     } catch (error) {
       console.error('Error saving wishes:', error);
       return false;

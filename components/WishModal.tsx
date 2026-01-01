@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wish } from '../types';
+import { validatePasswordStrength, validateTextInput, sanitizeTextInput } from '../utils/security';
 
 interface WishModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
   const [author, setAuthor] = useState('');
   const [password, setPassword] = useState('');
   const [color, setColor] = useState(COLORS[0]);
+  const [errors, setErrors] = useState({ message: '', author: '', password: '' });
 
   useEffect(() => {
     if (isOpen) {
@@ -55,11 +57,43 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !author.trim()) return;
+
+    // Reset errors
+    const newErrors = { message: '', author: '', password: '' };
+
+    // Validate message
+    const messageValidation = validateTextInput(message, 'Wish message');
+    if (!messageValidation.valid) {
+      newErrors.message = messageValidation.error || '';
+    }
+
+    // Validate author
+    const authorValidation = validateTextInput(author, 'Name');
+    if (!authorValidation.valid) {
+      newErrors.author = authorValidation.error || '';
+    }
+
+    // Validate password if provided
+    if (password) {
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.valid) {
+        newErrors.password = passwordValidation.error || '';
+      }
+    }
+
+    // If there are errors, display them and stop submission
+    if (newErrors.message || newErrors.author || newErrors.password) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Sanitize inputs before saving
+    const sanitizedMessage = sanitizeTextInput(message, 100);
+    const sanitizedAuthor = sanitizeTextInput(author, 20);
 
     onSave({
-      message,
-      author,
+      message: sanitizedMessage,
+      author: sanitizedAuthor,
       password,
       color,
       x: initialData?.x ?? position?.x ?? 50,
@@ -78,32 +112,50 @@ const WishModal: React.FC<WishModalProps> = ({ isOpen, onClose, onSave, initialD
         onClick={(e) => e.stopPropagation()}
       >
         <form onSubmit={handleSubmit} className="p-3 space-y-2">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full bg-white/50 border border-white/30 rounded-lg p-2 text-sm focus:ring-1 focus:ring-green-500 outline-none resize-none h-16 placeholder-gray-500"
-            placeholder="Your wish..."
-            maxLength={100}
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              className="w-full bg-white/50 border border-white/30 rounded-lg p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none placeholder-gray-500"
-              placeholder="Name"
-              maxLength={20}
+          <div>
+            <textarea
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setErrors({ ...errors, message: '' });
+              }}
+              className={`w-full bg-white/50 border ${errors.message ? 'border-red-500' : 'border-white/30'} rounded-lg p-2 text-sm focus:ring-1 focus:ring-green-500 outline-none resize-none h-16 placeholder-gray-500`}
+              placeholder="Your wish..."
+              maxLength={100}
               required
             />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/50 border border-white/30 rounded-lg p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none placeholder-gray-500"
-              placeholder="Password"
-            />
+            {errors.message && <p className="text-xs text-red-600 mt-0.5">{errors.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <input
+                type="text"
+                value={author}
+                onChange={(e) => {
+                  setAuthor(e.target.value);
+                  setErrors({ ...errors, author: '' });
+                }}
+                className={`w-full bg-white/50 border ${errors.author ? 'border-red-500' : 'border-white/30'} rounded-lg p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none placeholder-gray-500`}
+                placeholder="Name"
+                maxLength={20}
+                required
+              />
+              {errors.author && <p className="text-xs text-red-600 mt-0.5">{errors.author}</p>}
+            </div>
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors({ ...errors, password: '' });
+                }}
+                className={`w-full bg-white/50 border ${errors.password ? 'border-red-500' : 'border-white/30'} rounded-lg p-1.5 text-sm focus:ring-1 focus:ring-green-500 outline-none placeholder-gray-500`}
+                placeholder="Password (4+ chars)"
+              />
+              {errors.password && <p className="text-xs text-red-600 mt-0.5 whitespace-nowrap">{errors.password}</p>}
+            </div>
           </div>
 
           <div className="flex gap-1.5 justify-center">
