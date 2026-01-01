@@ -1,13 +1,11 @@
-// JSONBin.io configuration
-// 1. Go to https://jsonbin.io and sign up (free)
-// 2. Get your API key from Account Settings
-// 3. Create a new bin with initial content: []
-// 4. Copy the Bin ID
-// 5. Add these to your .env.local file
-
-const API_KEY = import.meta.env.VITE_JSONBIN_API_KEY || '';
-const BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID || '';
-const BASE_URL = 'https://api.jsonbin.io/v3';
+/**
+ * Wishes API - Now proxied through backend server
+ * JSONBin API keys are securely stored on the server, not exposed to the client
+ *
+ * Backend configuration (in .env.local on server):
+ * - JSONBIN_API_KEY: Your JSONBin.io API key
+ * - JSONBIN_BIN_ID: Your JSONBin.io bin ID
+ */
 
 
 export interface Wish {
@@ -65,33 +63,28 @@ function validateWishesArray(data: any): Wish[] {
 }
 
 export const wishesApi = {
-  // Fetch all wishes
+  // Fetch all wishes from backend
   async getWishes(): Promise<Wish[]> {
-    if (!API_KEY || !BIN_ID) {
-      console.warn('JSONBin not configured, using localStorage');
-      return [];
-    }
-
     try {
-      const response = await fetch(`${BASE_URL}/b/${BIN_ID}/latest`, {
+      const response = await fetch('/api/wishes', {
+        method: 'GET',
         headers: {
-          'X-Master-Key': API_KEY,
+          'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
+        if (response.status === 503) {
+          console.warn('JSONBin not configured on backend, using localStorage');
+          return [];
+        }
         throw new Error(`Failed to fetch wishes: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
 
-      // Validate response structure
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid API response structure');
-      }
-
       // Validate and sanitize the wishes array
-      const wishes = validateWishesArray(data.record || []);
+      const wishes = validateWishesArray(data.wishes || []);
       return wishes;
     } catch (error) {
       console.error('Error fetching wishes:', error);
@@ -99,13 +92,8 @@ export const wishesApi = {
     }
   },
 
-  // Save all wishes
+  // Save all wishes to backend
   async saveWishes(wishes: Wish[]): Promise<boolean> {
-    if (!API_KEY || !BIN_ID) {
-      console.warn('JSONBin not configured, using localStorage');
-      return false;
-    }
-
     // Validate wishes before sending
     const validWishes = validateWishesArray(wishes);
     if (validWishes.length !== wishes.length) {
@@ -113,16 +101,19 @@ export const wishesApi = {
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/b/${BIN_ID}`, {
+      const response = await fetch('/api/wishes', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Master-Key': API_KEY,
         },
-        body: JSON.stringify(validWishes),
+        body: JSON.stringify({ wishes: validWishes }),
       });
 
       if (!response.ok) {
+        if (response.status === 503) {
+          console.warn('JSONBin not configured on backend, using localStorage');
+          return false;
+        }
         throw new Error(`Failed to save wishes: ${response.status} ${response.statusText}`);
       }
 

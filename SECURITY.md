@@ -6,21 +6,35 @@ This document outlines the security considerations, known vulnerabilities, and b
 
 **⚠️ IMPORTANT: This is a demo application with intentional security limitations. It is NOT production-ready and should NOT be used with sensitive data or real user information.**
 
+## Architecture Update
+
+**✅ MAJOR IMPROVEMENT:** This application now includes an Express backend server that addresses the critical API key exposure vulnerability.
+
+### New Architecture
+
+```
+Frontend (Vite/React) ←→ Backend (Express) ←→ External APIs
+   Port 3000                  Port 3001         (Gemini, JSONBin)
+
+API keys NEVER exposed to browser - all external API calls proxied through backend
+```
+
 ## Known Security Limitations
 
-### Critical Issues
+### ✅ RESOLVED: API Key Exposure
+- **Previous Issue**: API keys were bundled into client-side JavaScript
+- **Resolution**: Implemented Express backend server (`server/index.js`)
+- **Current State**:
+  - ✅ API keys stored in `.env.local` on server only
+  - ✅ Frontend calls `/api/*` endpoints
+  - ✅ Backend proxies requests to external APIs
+  - ✅ Rate limiting (30 req/min per IP)
+  - ✅ CORS protection
+  - ✅ Security headers (HSTS, X-Frame-Options, etc.)
 
-#### 1. API Key Exposure in Client Bundle
-- **Issue**: The `GEMINI_API_KEY` and `VITE_JSONBIN_API_KEY` are bundled into the client-side JavaScript
-- **Risk**: Anyone can extract these keys from browser DevTools or source code
-- **Impact**: API key abuse, unauthorized API access, potential billing issues
-- **Mitigation for Production**:
-  - Move all API keys to a backend server
-  - Use environment variables only on the server side
-  - Implement API proxies to hide credentials from the client
-  - Use API key rotation and rate limiting
+### Critical Issues (Still Remaining)
 
-#### 2. Plaintext Password Storage
+#### 1. Plaintext Password Storage
 - **Issue**: Wish passwords are stored in plaintext in browser localStorage
 - **Risk**: Passwords can be extracted via DevTools, XSS attacks, or physical access
 - **Impact**: Unauthorized access to protected wishes
@@ -31,18 +45,19 @@ This document outlines the security considerations, known vulnerabilities, and b
   - Use secure, HTTP-only cookies for session management
   - Implement proper user authentication system
 
-#### 3. Client-Side Only Security
-- **Issue**: All authentication and authorization happens client-side
+#### 2. Client-Side Only Authentication
+- **Issue**: Wish password authentication happens client-side
 - **Risk**: Can be bypassed using browser DevTools
-- **Impact**: Anyone can modify, delete, or access any wish
+- **Impact**: Anyone can modify or delete any wish by circumventing client-side checks
 - **Mitigation for Production**:
   - Implement server-side authentication and authorization
   - Validate all operations on the server
   - Use JWT or session-based authentication
+  - Add user account system with server-side access control
 
 ### High Priority Issues
 
-#### 4. No Subresource Integrity (SRI) for External Resources
+#### 3. No Subresource Integrity (SRI) for External Resources
 - **Issue**: External resources loaded from CDNs without integrity checks
 - **Risk**: Man-in-the-middle attacks could inject malicious code
 - **Affected Resources**:
@@ -53,9 +68,9 @@ This document outlines the security considerations, known vulnerabilities, and b
   - Add SRI hashes to all external scripts and styles
   - Self-host critical dependencies
   - Use lock files and fixed versions
-  - Implement Content Security Policy (CSP) - ✅ Partially implemented
+  - Implement Content Security Policy (CSP) - ✅ Implemented
 
-#### 5. HTTPS Enforcement
+#### 4. HTTPS Enforcement (Production Only)
 - **Issue**: No HSTS headers or strict HTTPS enforcement
 - **Risk**: Potential downgrade attacks
 - **Mitigation for Production**:
@@ -65,7 +80,27 @@ This document outlines the security considerations, known vulnerabilities, and b
 
 ## Implemented Security Measures
 
-The following security improvements have been implemented in this demo:
+The following security improvements have been implemented:
+
+### ✅ 0. Backend Server with API Key Protection
+- **File**: `server/index.js`
+- **Purpose**: Secure API keys on server-side, prevent client exposure
+- **Implementation**:
+  - Express server proxies all external API calls
+  - API keys loaded from `.env.local` (server-side only)
+  - Environment variables never sent to client
+  - Vite proxy configuration forwards `/api/*` to backend
+- **Endpoints**:
+  - `POST /api/dj/request-song` - Gemini AI DJ requests
+  - `GET /api/wishes` - Fetch wishes from JSONBin
+  - `PUT /api/wishes` - Save wishes to JSONBin
+  - `GET /api/health` - Health check
+- **Additional Security**:
+  - Rate limiting: 30 requests per minute per IP
+  - CORS: Restricted to frontend URL only
+  - Security headers: HSTS, X-Frame-Options, X-Content-Type-Options
+  - Input validation on all endpoints
+  - Request size limits
 
 ### ✅ 1. Timing-Safe Password Comparison
 - **File**: `utils/security.ts:timingSafeEqual()`

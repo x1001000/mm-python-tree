@@ -8,12 +8,18 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          // Proxy API requests to backend server
+          '/api': {
+            target: env.VITE_BACKEND_URL || 'http://localhost:3001',
+            changeOrigin: true,
+            secure: false,
+          }
+        }
       },
       plugins: [react()],
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
+      // API keys are NO LONGER bundled into client code
+      // All API calls go through the backend proxy
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
